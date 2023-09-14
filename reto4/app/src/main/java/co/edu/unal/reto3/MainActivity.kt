@@ -1,27 +1,34 @@
 package co.edu.unal.reto3
 
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import androidx.activity.ComponentActivity
-import androidx.core.view.isEmpty
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 
-class MainActivity : ComponentActivity() {
+
+class MainActivity : AppCompatActivity() {
 
     val mGame: TicTacToeGame = TicTacToeGame()
 
     lateinit var mBoardButtons : Array<Button>
     lateinit var mInfoTextView : TextView
-    lateinit var mBtnNewGame : Button
     var mGameOver : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_layout)
+
+        supportActionBar?.title = "Reto4"
 
         mInfoTextView = findViewById<TextView>(R.id.information)
 
@@ -36,11 +43,6 @@ class MainActivity : ComponentActivity() {
             findViewById<Button>(R.id.eight),
             findViewById<Button>(R.id.nine)
         )
-
-        mBtnNewGame = findViewById<Button>(R.id.btnNewGame)
-        mBtnNewGame.setOnClickListener {
-            startNewGame()
-        }
 
         startNewGame()
     }
@@ -89,6 +91,77 @@ class MainActivity : ComponentActivity() {
             mBoardButtons[location].setTextColor(Color.rgb(0,200,0))
         else
             mBoardButtons[location].setTextColor(Color.rgb(200,0,0))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        super.onCreateOptionsMenu(menu)
+
+        var inflater : MenuInflater = menuInflater
+        inflater.inflate(R.menu.options_menu, menu)
+
+        return true
+    }
+
+    class DifficultyDialogFragment : DialogFragment() {
+
+        private var mainActivity : MainActivity? = null
+
+        fun setMainActivity(activity: MainActivity) {
+            mainActivity = activity
+        }
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            return activity?.let {
+                var currentLevel = mainActivity?.mGame?.difficultyLevelInt
+                if (currentLevel == null)
+                    currentLevel = 2
+                val builder = AlertDialog.Builder(it)
+                // Set the dialog title
+                builder.setTitle(R.string.difficulty_choose)
+                    // Specify the list array, the items to be selected by default (null for none),
+                    // and the listener through which to receive callbacks when items are selected
+                    .setSingleChoiceItems(R.array.difficulties, currentLevel,
+                        DialogInterface.OnClickListener() { dialog, which ->
+                            mainActivity?.mGame?.setDifficultyLevel(which)
+                        })
+
+                builder.create()
+            } ?: throw IllegalStateException("Activity cannot be null")
+        }
+    }
+
+    class QuitDialogFragment : DialogFragment() {
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+            return activity?.let {
+                var builder = AlertDialog.Builder(it)
+                builder.setTitle(R.string.quit_question)
+                    .setPositiveButton(R.string.yes, DialogInterface.OnClickListener() { dialogInterface, i ->
+                        activity?.finish()
+                    })
+                    .setNegativeButton(R.string.no, null)
+                builder.create()
+            } ?: throw IllegalStateException("Activity cannot be null")
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId){
+            R.id.new_game -> {
+                startNewGame()
+                return true
+            }
+            R.id.ai_difficulty -> {
+                val difficultyDialog = DifficultyDialogFragment()
+                difficultyDialog.setMainActivity(this)
+                difficultyDialog.show(supportFragmentManager, "dialog")
+                return true
+            }
+            R.id.quit -> {
+                val quitDialogFragment = QuitDialogFragment()
+                quitDialogFragment.show(supportFragmentManager, "dialog")
+                return true
+            }
+        }
+        return false
     }
 
     fun main() {

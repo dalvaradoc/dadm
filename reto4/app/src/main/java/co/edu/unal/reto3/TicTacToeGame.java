@@ -17,8 +17,13 @@ public class TicTacToeGame {
     public static final char HUMAN_PLAYER = 'X';
     public static final char COMPUTER_PLAYER = 'O';
     public static final char OPEN_SPOT = ' ';
+    // The computer's difficulty levels
+    public enum DifficultyLevel {Easy, Harder, Expert};
+    // Current difficulty level
+    private DifficultyLevel mDifficultyLevel = DifficultyLevel.Expert;
 
     private Random mRand;
+
 
     public TicTacToeGame() {
 
@@ -86,30 +91,38 @@ public class TicTacToeGame {
 
     public int getComputerMove()
     {
+        System.out.println("Generating move in difficulty " + mDifficultyLevel);
         int move;
 
+        // Check if difficulty is not easy (so is expert or hard)
         // First see if there's a move O can make to win
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
-                mBoard[i] = COMPUTER_PLAYER;
-                if (checkForWinner() == 3) {
-                    return i;
+        if (mDifficultyLevel != DifficultyLevel.Easy) {
+            for (int i = 0; i < BOARD_SIZE; i++) {
+                if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
+                    mBoard[i] = COMPUTER_PLAYER;
+                    if (checkForWinner() == 3) {
+                        return i;
+                    }
+                    mBoard[i] = OPEN_SPOT;
                 }
-                mBoard[i] = OPEN_SPOT;
             }
         }
 
+        // Check if difficulty is expert
         // See if there's a move O can make to block X from winning
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
-                mBoard[i] = HUMAN_PLAYER;
-                if (checkForWinner() == 2) {
-                    return i;
+        if (mDifficultyLevel == DifficultyLevel.Expert) {
+            for (int i = 0; i < BOARD_SIZE; i++) {
+                if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
+                    mBoard[i] = HUMAN_PLAYER;
+                    if (checkForWinner() == 2) {
+                        return i;
+                    }
+                    mBoard[i] = OPEN_SPOT;
                 }
-                mBoard[i] = OPEN_SPOT;
             }
         }
 
+        // Any difficulty can end up in a random move
         // Generate random move
         do
         {
@@ -136,5 +149,20 @@ public class TicTacToeGame {
         }
 
         mBoard[location] = player;
+    }
+
+    public DifficultyLevel getDifficultyLevel() {
+        return mDifficultyLevel;
+    }
+    public void setDifficultyLevel(int difficultyLevel) {
+        if (difficultyLevel < 0 || difficultyLevel > 2){
+            return;
+        }
+        System.out.println("New dificulty lvl is: " + DifficultyLevel.values()[difficultyLevel]);
+        mDifficultyLevel = DifficultyLevel.values()[difficultyLevel];
+    }
+
+    public int getDifficultyLevelInt () {
+        return mDifficultyLevel.ordinal();
     }
 }
