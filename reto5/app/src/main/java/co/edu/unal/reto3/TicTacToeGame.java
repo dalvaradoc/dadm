@@ -12,7 +12,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class TicTacToeGame {
-    public final int BOARD_SIZE = 9;
+    public final static int BOARD_SIZE = 9;
     private char mBoard[] = {' ',' ',' ',' ',' ',' ',' ',' ',' '};
     public static final char HUMAN_PLAYER = 'X';
     public static final char COMPUTER_PLAYER = 'O';
@@ -91,16 +91,16 @@ public class TicTacToeGame {
 
     public int getComputerMove()
     {
-        System.out.println("Generating move in difficulty " + mDifficultyLevel);
         int move;
 
         // Check if difficulty is not easy (so is expert or hard)
         // First see if there's a move O can make to win
         if (mDifficultyLevel != DifficultyLevel.Easy) {
             for (int i = 0; i < BOARD_SIZE; i++) {
-                if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
+                if (mBoard[i] == OPEN_SPOT) {
                     mBoard[i] = COMPUTER_PLAYER;
                     if (checkForWinner() == 3) {
+                        mBoard[i] = OPEN_SPOT;
                         return i;
                     }
                     mBoard[i] = OPEN_SPOT;
@@ -112,9 +112,10 @@ public class TicTacToeGame {
         // See if there's a move O can make to block X from winning
         if (mDifficultyLevel == DifficultyLevel.Expert) {
             for (int i = 0; i < BOARD_SIZE; i++) {
-                if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
+                if (mBoard[i] == OPEN_SPOT) {
                     mBoard[i] = HUMAN_PLAYER;
                     if (checkForWinner() == 2) {
+                        mBoard[i] = OPEN_SPOT;
                         return i;
                     }
                     mBoard[i] = OPEN_SPOT;
@@ -138,17 +139,20 @@ public class TicTacToeGame {
         }
     }
 
-    public void setMove(char player, int location){
+    public boolean setMove(char player, int location){
         if (player != HUMAN_PLAYER && player != COMPUTER_PLAYER){
             System.out.println("Error, player not valid.");
-            return;
+            return false;
         }
 
-        if (location < 0 || location > 8 || mBoard[location] != OPEN_SPOT) {
+        if (location < 0 || location > BOARD_SIZE-1 || mBoard[location] != OPEN_SPOT) {
             System.out.println("Error, location no valid");
+            return false;
         }
 
         mBoard[location] = player;
+        System.out.println(player + " placed on " + location);
+        return true;
     }
 
     public DifficultyLevel getDifficultyLevel() {
@@ -158,11 +162,14 @@ public class TicTacToeGame {
         if (difficultyLevel < 0 || difficultyLevel > 2){
             return;
         }
-        System.out.println("New dificulty lvl is: " + DifficultyLevel.values()[difficultyLevel]);
         mDifficultyLevel = DifficultyLevel.values()[difficultyLevel];
     }
 
     public int getDifficultyLevelInt () {
         return mDifficultyLevel.ordinal();
+    }
+
+    public char getBoardOccupant (int i){
+        return mBoard[i];
     }
 }

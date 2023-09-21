@@ -93,6 +93,7 @@ public class TicTacToeGame {
             if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
                 mBoard[i] = COMPUTER_PLAYER;
                 if (checkForWinner() == 3) {
+                    mBoard[i] = OPEN_SPOT;
                     return i;
                 }
                 mBoard[i] = OPEN_SPOT;
@@ -104,6 +105,7 @@ public class TicTacToeGame {
             if (mBoard[i] != HUMAN_PLAYER && mBoard[i] != COMPUTER_PLAYER) {
                 mBoard[i] = HUMAN_PLAYER;
                 if (checkForWinner() == 2) {
+                    mBoard[i] = OPEN_SPOT;
                     return i;
                 }
                 mBoard[i] = OPEN_SPOT;

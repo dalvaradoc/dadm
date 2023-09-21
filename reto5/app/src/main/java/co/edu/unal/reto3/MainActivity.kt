@@ -3,46 +3,36 @@ package co.edu.unal.reto3
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
-import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.widget.Button
+import android.view.MotionEvent
+import android.view.View.OnTouchListener
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 
 
 class MainActivity : AppCompatActivity() {
-
     val mGame: TicTacToeGame = TicTacToeGame()
 
-    lateinit var mBoardButtons : Array<Button>
-    lateinit var mInfoTextView : TextView
-    var mGameOver : Boolean = false
+    private lateinit var mInfoTextView : TextView
+    private lateinit var mBoardView : BoardView
+
+    private var mGameOver : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_layout)
 
+        mBoardView = findViewById(R.id.board)
+        mBoardView.setGame(mGame)
+        mBoardView.setOnTouchListener(mTouchListener)
+
         supportActionBar?.title = "Reto4"
 
         mInfoTextView = findViewById<TextView>(R.id.information)
-
-        mBoardButtons = arrayOf<Button>(
-            findViewById<Button>(R.id.one),
-            findViewById<Button>(R.id.two),
-            findViewById<Button>(R.id.three),
-            findViewById<Button>(R.id.four),
-            findViewById<Button>(R.id.five),
-            findViewById<Button>(R.id.six),
-            findViewById<Button>(R.id.seven),
-            findViewById<Button>(R.id.eight),
-            findViewById<Button>(R.id.nine)
-        )
 
         startNewGame()
     }
@@ -50,47 +40,16 @@ class MainActivity : AppCompatActivity() {
     private fun startNewGame() {
         mGame.clearBoard()
         mGameOver = false
-        for (i in mBoardButtons.indices) {
-            mBoardButtons[i].text = ""
-            mBoardButtons[i].isEnabled = true
-            mBoardButtons[i].setOnClickListener {
-                if (mBoardButtons[i].isEnabled){
-                    setMove(TicTacToeGame.HUMAN_PLAYER, i)
-
-                    var winner = mGame.checkForWinner()
-                    if (winner == 0){
-                        mInfoTextView.setText(R.string.turn_computer)
-                        val move = mGame.computerMove
-                        setMove(TicTacToeGame.COMPUTER_PLAYER, move)
-                        winner = mGame.checkForWinner()
-                    }
-
-                    if (winner != 0)
-                        mGameOver = true
-
-                    when (winner) {
-                        0 -> mInfoTextView.setText(R.string.turn_human)
-                        1 -> mInfoTextView.setText(R.string.result_tie)
-                        2 -> mInfoTextView.setText(R.string.result_human_wins)
-                        3 -> mInfoTextView.setText(R.string.result_computer_wins)
-                        else -> mInfoTextView.text = "Error D:"
-                    }
-                }
-            }
-        }
+        mBoardView.invalidate()
         mInfoTextView.setText(R.string.first_human)
     }
 
-    private fun setMove(player: Char, location : Int) {
-        if (mGameOver)
-            return
-        mGame.setMove(player, location)
-        mBoardButtons[location].isEnabled = false;
-        mBoardButtons[location].text = player.toString()
-        if (player == TicTacToeGame.HUMAN_PLAYER)
-            mBoardButtons[location].setTextColor(Color.rgb(0,200,0))
-        else
-            mBoardButtons[location].setTextColor(Color.rgb(200,0,0))
+    private fun setMove(player: Char, location : Int) : Boolean {
+        if (mGame.setMove(player, location)){
+            mBoardView.invalidate()
+            return true
+        }
+        return false
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -162,6 +121,42 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return false
+    }
+
+    private val mTouchListener = OnTouchListener {v, event ->
+        v.performClick()
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                val col = (event.x / mBoardView.getBoardCellWidth()).toInt();
+                val row = (event.y / mBoardView.getBoardCellHeight()).toInt();
+                val pos = row * 3 + col;
+
+                println(pos)
+
+                if (!mGameOver && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
+                    var winner = mGame.checkForWinner()
+                    if (winner == 0){
+                        mInfoTextView.setText(R.string.turn_computer)
+                        val move = mGame.computerMove
+                        setMove(TicTacToeGame.COMPUTER_PLAYER, move)
+                        winner = mGame.checkForWinner()
+                    }
+
+                    if (winner != 0)
+                        mGameOver = true
+
+                    when (winner) {
+                        0 -> mInfoTextView.setText(R.string.turn_human)
+                        1 -> mInfoTextView.setText(R.string.result_tie)
+                        2 -> mInfoTextView.setText(R.string.result_human_wins)
+                        3 -> mInfoTextView.setText(R.string.result_computer_wins)
+                        else -> mInfoTextView.text = "Error D:"
+                    }
+                }
+            }
+        }
+
+        false
     }
 
     fun main() {
