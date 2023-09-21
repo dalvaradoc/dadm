@@ -3,7 +3,10 @@ package co.edu.unal.reto3
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -19,8 +22,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mInfoTextView : TextView
     private lateinit var mBoardView : BoardView
+    private lateinit var mHumanMediaPlayer : MediaPlayer
+    private lateinit var mComputerMediaPlayer : MediaPlayer
 
     private var mGameOver : Boolean = false
+    private var mPlayerTurn : Char = TicTacToeGame.HUMAN_PLAYER
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,11 +36,25 @@ class MainActivity : AppCompatActivity() {
         mBoardView.setGame(mGame)
         mBoardView.setOnTouchListener(mTouchListener)
 
-        supportActionBar?.title = "Reto4"
+        supportActionBar?.title = "Reto5"
 
         mInfoTextView = findViewById<TextView>(R.id.information)
 
         startNewGame()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        mHumanMediaPlayer = MediaPlayer.create(applicationContext, R.raw.human_move)
+        mComputerMediaPlayer = MediaPlayer.create(applicationContext, R.raw.computer_move)
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        mHumanMediaPlayer.release()
+        mComputerMediaPlayer.release()
     }
 
     private fun startNewGame() {
@@ -125,22 +145,26 @@ class MainActivity : AppCompatActivity() {
 
     private val mTouchListener = OnTouchListener {v, event ->
         v.performClick()
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                val col = (event.x / mBoardView.getBoardCellWidth()).toInt();
-                val row = (event.y / mBoardView.getBoardCellHeight()).toInt();
-                val pos = row * 3 + col;
 
-                println(pos)
+        val col = (event.x / mBoardView.getBoardCellWidth()).toInt();
+        val row = (event.y / mBoardView.getBoardCellHeight()).toInt();
+        val pos = row * 3 + col;
 
-                if (!mGameOver && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
-                    var winner = mGame.checkForWinner()
-                    if (winner == 0){
-                        mInfoTextView.setText(R.string.turn_computer)
-                        val move = mGame.computerMove
-                        setMove(TicTacToeGame.COMPUTER_PLAYER, move)
-                        winner = mGame.checkForWinner()
-                    }
+        println(pos)
+
+        if (!mGameOver && mPlayerTurn == TicTacToeGame.HUMAN_PLAYER && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
+            mHumanMediaPlayer.start()
+
+            var winner = mGame.checkForWinner()
+            if (winner == 0){
+                mPlayerTurn = TicTacToeGame.COMPUTER_PLAYER
+                mInfoTextView.setText(R.string.turn_computer)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val move = mGame.computerMove
+                    setMove(TicTacToeGame.COMPUTER_PLAYER, move)
+                    mComputerMediaPlayer.start()
+                    mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
+                    winner = mGame.checkForWinner()
 
                     if (winner != 0)
                         mGameOver = true
@@ -152,7 +176,18 @@ class MainActivity : AppCompatActivity() {
                         3 -> mInfoTextView.setText(R.string.result_computer_wins)
                         else -> mInfoTextView.text = "Error D:"
                     }
-                }
+                }, 1000)
+            }
+
+            if (winner != 0)
+                mGameOver = true
+
+            when (winner) {
+                0 -> mInfoTextView.setText(R.string.turn_computer)
+                1 -> mInfoTextView.setText(R.string.result_tie)
+                2 -> mInfoTextView.setText(R.string.result_human_wins)
+                3 -> mInfoTextView.setText(R.string.result_computer_wins)
+                else -> mInfoTextView.text = "Error D:"
             }
         }
 
