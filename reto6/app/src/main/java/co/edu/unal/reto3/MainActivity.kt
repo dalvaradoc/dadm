@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         mBoardView.setGame(mGame)
         mBoardView.setOnTouchListener(mTouchListener)
 
-        supportActionBar?.title = "Reto5"
+        supportActionBar?.title = "Reto6"
 
         mInfoTextView = findViewById<TextView>(R.id.information)
 
