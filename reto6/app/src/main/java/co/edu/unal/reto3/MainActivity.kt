@@ -3,10 +3,12 @@ package co.edu.unal.reto3
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -15,18 +17,26 @@ import android.view.View.OnTouchListener
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import java.lang.Error
 
 
 class MainActivity : AppCompatActivity() {
     val mGame: TicTacToeGame = TicTacToeGame()
 
     private lateinit var mInfoTextView : TextView
+    private lateinit var mHumanWinsTextView : TextView
+    private lateinit var mComputerWinsTextView : TextView
+    private lateinit var mTiesTextView : TextView
     private lateinit var mBoardView : BoardView
     private lateinit var mHumanMediaPlayer : MediaPlayer
     private lateinit var mComputerMediaPlayer : MediaPlayer
+    private lateinit var mPrefs : SharedPreferences
 
     private var mGameOver : Boolean = false
     private var mPlayerTurn : Char = TicTacToeGame.HUMAN_PLAYER
+    private var mHumanWins : Int = 0
+    private var mComputerWins : Int = 0
+    private var mTies : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +46,20 @@ class MainActivity : AppCompatActivity() {
         mBoardView.setGame(mGame)
         mBoardView.setOnTouchListener(mTouchListener)
 
-        supportActionBar?.title = "Reto6"
+        supportActionBar?.title = "Reto 6"
 
         mInfoTextView = findViewById<TextView>(R.id.information)
+        mHumanWinsTextView = findViewById(R.id.human_wins)
+        mTiesTextView = findViewById(R.id.ties)
+        mComputerWinsTextView = findViewById(R.id.computer_wins)
+
+        mPrefs = getSharedPreferences("ttt_prefs", MODE_PRIVATE)
+
+        setSavedScores()
+        mGame.setDifficultyLevel(mPrefs.getInt("mDifficultyLevel", 2))
 
         startNewGame()
+        displayScores()
     }
 
     override fun onResume() {
@@ -55,6 +74,74 @@ class MainActivity : AppCompatActivity() {
 
         mHumanMediaPlayer.release()
         mComputerMediaPlayer.release()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putCharArray("board", mGame.boardState)
+        outState.putBoolean("mGameOver", mGameOver)
+        outState.putCharSequence("info", mInfoTextView.text)
+        outState.putInt("mHumanWins", mHumanWins)
+        outState.putInt("mComputerWins", mComputerWins)
+        outState.putInt("mTies", mTies)
+        outState.putChar("mPlayerTurn", mPlayerTurn)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+
+        mGame.boardState = savedInstanceState.getCharArray("board");
+        mGameOver = savedInstanceState.getBoolean("mGameOver");
+        mInfoTextView.text = savedInstanceState.getCharSequence("info");
+        mHumanWins = savedInstanceState.getInt("mHumanWins");
+        mComputerWins = savedInstanceState.getInt("mComputerWins");
+        mTies = savedInstanceState.getInt("mTies");
+        mPlayerTurn = savedInstanceState.getChar("mPlayerTurn");
+
+        displayScores()
+
+        if (mPlayerTurn == TicTacToeGame.COMPUTER_PLAYER && !mGameOver){
+            Handler(Looper.getMainLooper()).postDelayed({
+                val move = mGame.computerMove
+                setMove(TicTacToeGame.COMPUTER_PLAYER, move)
+                mComputerMediaPlayer.start()
+                mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
+                val winner = mGame.checkForWinner()
+
+                if (winner != 0)
+                    mGameOver = true
+
+                when (winner) {
+                    0 -> mInfoTextView.setText(R.string.turn_human)
+                    1 -> {
+                        mInfoTextView.setText(R.string.result_tie)
+                        ++mTies
+                    }
+                    2 -> {
+                        ++mHumanWins
+                    }
+                    3 -> {
+                        mInfoTextView.setText(R.string.result_computer_wins)
+                        ++mComputerWins
+                    }
+                    else -> mInfoTextView.text = "Error D:"
+                }
+                displayScores()
+            }, 500)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        val ed : SharedPreferences.Editor = mPrefs.edit()
+        ed.putInt("mHumanWins", mHumanWins)
+        ed.putInt("mTies", mTies)
+        ed.putInt("mComputerWins", mComputerWins)
+        ed.putInt("mDifficultyLevel", mGame.difficultyLevelInt)
+        ed.commit()
+
     }
 
     private fun startNewGame() {
@@ -108,13 +195,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    class QuitDialogFragment : DialogFragment() {
+    private fun setDifficultyLevel(level : Int) {
+        mGame.setDifficultyLevel(level)
+        val ed = mPrefs.edit()
+        ed.putInt("mDifficultyLevel", level)
+        ed.commit()
+    }
+
+//    class QuitDialogFragment : DialogFragment() {
+//        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+//            return activity?.let {
+//                var builder = AlertDialog.Builder(it)
+//                builder.setTitle(R.string.quit_question)
+//                    .setPositiveButton(R.string.yes, DialogInterface.OnClickListener() { dialogInterface, i ->
+//                        activity?.finish()
+//                    })
+//                    .setNegativeButton(R.string.no, null)
+//                builder.create()
+//            } ?: throw IllegalStateException("Activity cannot be null")
+//        }
+//    }
+
+    class ResetScoresDialogFragment : DialogFragment() {
+
         override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             return activity?.let {
                 var builder = AlertDialog.Builder(it)
-                builder.setTitle(R.string.quit_question)
+                builder.setTitle(R.string.reset_scores_questions)
                     .setPositiveButton(R.string.yes, DialogInterface.OnClickListener() { dialogInterface, i ->
-                        activity?.finish()
+                        val prefs = activity?.getSharedPreferences("ttt_prefs", MODE_PRIVATE)
+                        if (prefs != null) {
+                            val ed : SharedPreferences.Editor = prefs.edit()
+                            ed.putInt("mHumanWins", 0)
+                            ed.putInt("mTies", 0)
+                            ed.putInt("mComputerWins", 0)
+                            ed.commit()
+                            val intent = activity?.intent
+                            activity?.finish()
+                            if (intent != null)
+                                startActivity(intent)
+                            println("LMAO?")
+                        } else {
+                            println("WTF???")
+                        }
                     })
                     .setNegativeButton(R.string.no, null)
                 builder.create()
@@ -134,9 +257,9 @@ class MainActivity : AppCompatActivity() {
                 difficultyDialog.show(supportFragmentManager, "dialog")
                 return true
             }
-            R.id.quit -> {
-                val quitDialogFragment = QuitDialogFragment()
-                quitDialogFragment.show(supportFragmentManager, "dialog")
+            R.id.reset_scores -> {
+                val resetDialogFragment = ResetScoresDialogFragment()
+                resetDialogFragment.show(supportFragmentManager, "dialog")
                 return true
             }
         }
@@ -151,47 +274,82 @@ class MainActivity : AppCompatActivity() {
         val pos = row * 3 + col;
 
         println(pos)
-
         if (!mGameOver && mPlayerTurn == TicTacToeGame.HUMAN_PLAYER && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
-            mHumanMediaPlayer.start()
+                mHumanMediaPlayer.start()
 
-            var winner = mGame.checkForWinner()
-            if (winner == 0){
-                mPlayerTurn = TicTacToeGame.COMPUTER_PLAYER
-                mInfoTextView.setText(R.string.turn_computer)
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val move = mGame.computerMove
-                    setMove(TicTacToeGame.COMPUTER_PLAYER, move)
-                    mComputerMediaPlayer.start()
-                    mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
-                    winner = mGame.checkForWinner()
+                var winner = mGame.checkForWinner()
+                if (winner == 0){
+                    mPlayerTurn = TicTacToeGame.COMPUTER_PLAYER
+                    mInfoTextView.setText(R.string.turn_computer)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        val move = mGame.computerMove
+                        setMove(TicTacToeGame.COMPUTER_PLAYER, move)
+                        try {
+                            mComputerMediaPlayer.start()
+                        } catch (e : Exception) {
+                            println(e.message)
+                        }
+                        mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
+                        winner = mGame.checkForWinner()
 
-                    if (winner != 0)
-                        mGameOver = true
+                        if (winner != 0)
+                            mGameOver = true
 
-                    when (winner) {
-                        0 -> mInfoTextView.setText(R.string.turn_human)
-                        1 -> mInfoTextView.setText(R.string.result_tie)
-                        2 -> mInfoTextView.setText(R.string.result_human_wins)
-                        3 -> mInfoTextView.setText(R.string.result_computer_wins)
-                        else -> mInfoTextView.text = "Error D:"
+                        when (winner) {
+                            0 -> mInfoTextView.setText(R.string.turn_human)
+                            1 -> {
+                                mInfoTextView.setText(R.string.result_tie)
+                                ++mTies
+                            }
+                            2 -> {
+                                ++mHumanWins
+                            }
+                            3 -> {
+                                mInfoTextView.setText(R.string.result_computer_wins)
+                                ++mComputerWins
+                            }
+                            else -> mInfoTextView.text = "Error D:"
+                        }
+                        displayScores()
+                    }, 1000)
+                }
+
+                if (winner != 0)
+                    mGameOver = true
+
+                when (winner) {
+                    0 -> mInfoTextView.setText(R.string.turn_computer)
+                    1 -> {
+                        mInfoTextView.setText(R.string.result_tie)
+                        ++mTies
                     }
-                }, 1000)
+                    2 -> {
+                        mInfoTextView.setText(R.string.result_human_wins)
+                        ++mHumanWins
+                    }
+                    3 -> {
+                        mInfoTextView.setText(R.string.result_computer_wins)
+                        ++mComputerWins
+                    }
+                    else -> mInfoTextView.text = "Error D:"
+                }
+                displayScores()
             }
-
-            if (winner != 0)
-                mGameOver = true
-
-            when (winner) {
-                0 -> mInfoTextView.setText(R.string.turn_computer)
-                1 -> mInfoTextView.setText(R.string.result_tie)
-                2 -> mInfoTextView.setText(R.string.result_human_wins)
-                3 -> mInfoTextView.setText(R.string.result_computer_wins)
-                else -> mInfoTextView.text = "Error D:"
-            }
-        }
 
         false
+    }
+
+    private fun setSavedScores() {
+        mHumanWins = mPrefs.getInt("mHumanWins", 0);
+        mComputerWins = mPrefs.getInt("mComputerWins", 0);
+        mTies = mPrefs.getInt("mTies", 0);
+        displayScores()
+    }
+
+    private fun displayScores() {
+        mHumanWinsTextView.text = getString(R.string.human_wins, mHumanWins)
+        mTiesTextView.text = getString(R.string.ties, mTies)
+        mComputerWinsTextView.text = getString(R.string.computer_wins, mComputerWins)
     }
 
     fun main() {

@@ -1,34 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="center_horizontal"
     android:paddingTop="15dp">
     <co.edu.unal.reto3.BoardView
         android:id="@+id/board"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_marginTop="5dp" />
+        android:layout_width="270dp"
+        android:layout_height="270dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="40dp"/>
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
         <TextView android:id="@+id/information" android:layout_width="fill_parent"
             android:layout_height="wrap_content" android:text="info"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp"
-            android:textSize="20dp" />
+            android:gravity="left" android:height="25dp" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
+            android:textSize="20sp" />
         <TextView android:id="@+id/human_wins" android:layout_width="fill_parent"
             android:layout_height="wrap_content" android:text="@string/human_wins"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
+            android:gravity="left" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
             android:textSize="20sp" />
         <TextView android:id="@+id/ties" android:layout_width="fill_parent"
             android:layout_height="wrap_content" android:text="@string/ties"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
+            android:gravity="left" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
             android:textSize="20sp" />
         <TextView android:id="@+id/computer_wins" android:layout_width="fill_parent"
             android:layout_height="wrap_content" android:text="@string/computer_wins"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
+            android:gravity="left" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
             android:textSize="20sp" />
     </LinearLayout>
 </LinearLayout>

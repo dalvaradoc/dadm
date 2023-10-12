@@ -7,6 +7,7 @@ package co.edu.unal.reto3;
  * is X and the computer is O.
  */
 
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Random;
 import java.util.Scanner;
@@ -171,5 +172,17 @@ public class TicTacToeGame {
 
     public char getBoardOccupant (int i){
         return mBoard[i];
+    }
+
+    public char[] getBoardState() {
+        return mBoard;
+    }
+
+    public void setBoardState(char[] boardState) {
+        if (boardState == null){
+            System.out.println("WTF???");
+            return;
+        }
+        mBoard = boardState.clone();
     }
 }
