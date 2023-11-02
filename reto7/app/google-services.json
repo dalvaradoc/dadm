@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "405345958453",
+    "project_id": "dadm-reto-7",
+    "storage_bucket": "dadm-reto-7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:405345958453:android:4da3720b63455c7c74cf7c",
+        "android_client_info": {
+          "package_name": "co.edu.unal.reto3"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAt9TCGP5ssJ1R1mWYJ7obYeILpvzlIkV0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

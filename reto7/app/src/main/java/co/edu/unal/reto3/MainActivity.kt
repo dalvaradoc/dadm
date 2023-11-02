@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PersistableBundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -17,6 +18,8 @@ import android.view.View.OnTouchListener
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import java.lang.Error
 
 
@@ -24,22 +27,34 @@ class MainActivity : AppCompatActivity() {
     val mGame: TicTacToeGame = TicTacToeGame()
 
     private lateinit var mInfoTextView : TextView
-    private lateinit var mHumanWinsTextView : TextView
-    private lateinit var mComputerWinsTextView : TextView
-    private lateinit var mTiesTextView : TextView
+//    private lateinit var mHumanWinsTextView : TextView
+//    private lateinit var mComputerWinsTextView : TextView
+//    private lateinit var mTiesTextView : TextView
     private lateinit var mBoardView : BoardView
     private lateinit var mHumanMediaPlayer : MediaPlayer
     private lateinit var mComputerMediaPlayer : MediaPlayer
     private lateinit var mPrefs : SharedPreferences
 
+    private lateinit var mUsername : String
+    private lateinit var mBoardName : String
+    private lateinit var mBoard : List<String>
+    private lateinit var mPlayer1 : String
+    private lateinit var mPlayer2 : String
+
+    private var mWaitingPlayers : Boolean = true
     private var mGameOver : Boolean = false
-    private var mPlayerTurn : Char = TicTacToeGame.HUMAN_PLAYER
-    private var mHumanWins : Int = 0
-    private var mComputerWins : Int = 0
-    private var mTies : Int = 0
+
+    private var mPlayerTurn : String = ""
+
+//    private var mHumanWins : Int = 0
+//    private var mComputerWins : Int = 0
+//    private var mTies : Int = 0
+
+    private val db = Firebase.firestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.main_layout)
 
         mBoardView = findViewById(R.id.board)
@@ -49,17 +64,57 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.title = "Reto 6"
 
         mInfoTextView = findViewById<TextView>(R.id.information)
-        mHumanWinsTextView = findViewById(R.id.human_wins)
-        mTiesTextView = findViewById(R.id.ties)
-        mComputerWinsTextView = findViewById(R.id.computer_wins)
+//        mHumanWinsTextView = findViewById(R.id.human_wins)
+//        mTiesTextView = findViewById(R.id.ties)
+//        mComputerWinsTextView = findViewById(R.id.computer_wins)
 
         mPrefs = getSharedPreferences("ttt_prefs", MODE_PRIVATE)
 
         setSavedScores()
         mGame.setDifficultyLevel(mPrefs.getInt("mDifficultyLevel", 2))
 
-        startNewGame()
-        displayScores()
+        mUsername = mPrefs.getString("username", "error").toString()
+        mBoardName = mPrefs.getString("currentBoard", "error").toString()
+
+        print(mBoardName)
+
+        mInfoTextView.text = "waiting players..."
+
+        val docRef = db.collection("boards").document(mBoardName)
+        docRef.addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.w("lol", "Listen failed.", e)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null && snapshot.exists()) {
+                if (snapshot.get("player2") != "") {
+                    mBoardView.invalidate()
+                    mWaitingPlayers = false
+                    mPlayer1 = snapshot.id
+                    mPlayer2 = snapshot.get("player2").toString()
+                    mPlayerTurn = snapshot.get("turn").toString()
+                    mBoard = snapshot.get("board").toString().split(",")
+                    for (i in mBoard.indices){
+                        mGame.mBoard[i] = mBoard[i].toCharArray()[0]
+                    }
+                    if (snapshot.get("status") == "finished") {
+                        mGameOver = true
+                        mInfoTextView.text = "It's a tie!"
+                        for (tile in mGame.mBoard){
+                            if (tile == ' '){
+                                mInfoTextView.text = "The winner is " + mPlayerTurn
+                            }
+                        }
+                    } else {
+                        mInfoTextView.text = "It's turn of " + mPlayerTurn
+                    }
+                }
+            } else {
+                Log.d("lol", "Current data: null")
+            }
+        }
+
     }
 
     override fun onResume() {
@@ -76,73 +131,73 @@ class MainActivity : AppCompatActivity() {
         mComputerMediaPlayer.release()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        super.onSaveInstanceState(outState)
+//
+//        outState.putCharArray("board", mGame.boardState)
+//        outState.putBoolean("mGameOver", mGameOver)
+//        outState.putCharSequence("info", mInfoTextView.text)
+////        outState.putInt("mHumanWins", mHumanWins)
+////        outState.putInt("mComputerWins", mComputerWins)
+////        outState.putInt("mTies", mTies)
+//        outState.putChar("mPlayerTurn", mPlayerTurn)
+//    }
 
-        outState.putCharArray("board", mGame.boardState)
-        outState.putBoolean("mGameOver", mGameOver)
-        outState.putCharSequence("info", mInfoTextView.text)
-        outState.putInt("mHumanWins", mHumanWins)
-        outState.putInt("mComputerWins", mComputerWins)
-        outState.putInt("mTies", mTies)
-        outState.putChar("mPlayerTurn", mPlayerTurn)
-    }
+//    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+//        super.onRestoreInstanceState(savedInstanceState)
+//
+//        mGame.boardState = savedInstanceState.getCharArray("board");
+//        mGameOver = savedInstanceState.getBoolean("mGameOver");
+//        mInfoTextView.text = savedInstanceState.getCharSequence("info");
+////        mHumanWins = savedInstanceState.getInt("mHumanWins");
+////        mComputerWins = savedInstanceState.getInt("mComputerWins");
+////        mTies = savedInstanceState.getInt("mTies");
+//        mPlayerTurn = savedInstanceState.getChar("mPlayerTurn");
+//
+//        displayScores()
+//
+//        if (mPlayerTurn == TicTacToeGame.COMPUTER_PLAYER && !mGameOver){
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                val move = mGame.computerMove
+//                setMove(TicTacToeGame.COMPUTER_PLAYER, move)
+//                mComputerMediaPlayer.start()
+//                mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
+//                val winner = mGame.checkForWinner()
+//
+//                if (winner != 0)
+//                    mGameOver = true
+//
+//                when (winner) {
+//                    0 -> mInfoTextView.setText(R.string.turn_human)
+//                    1 -> {
+//                        mInfoTextView.setText(R.string.result_tie)
+////                        ++mTies
+//                    }
+//                    2 -> {
+////                        ++mHumanWins
+//                    }
+//                    3 -> {
+//                        mInfoTextView.setText(R.string.result_computer_wins)
+////                        ++mComputerWins
+//                    }
+//                    else -> mInfoTextView.text = "Error D:"
+//                }
+//                displayScores()
+//            }, 500)
+//        }
+//    }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-
-        mGame.boardState = savedInstanceState.getCharArray("board");
-        mGameOver = savedInstanceState.getBoolean("mGameOver");
-        mInfoTextView.text = savedInstanceState.getCharSequence("info");
-        mHumanWins = savedInstanceState.getInt("mHumanWins");
-        mComputerWins = savedInstanceState.getInt("mComputerWins");
-        mTies = savedInstanceState.getInt("mTies");
-        mPlayerTurn = savedInstanceState.getChar("mPlayerTurn");
-
-        displayScores()
-
-        if (mPlayerTurn == TicTacToeGame.COMPUTER_PLAYER && !mGameOver){
-            Handler(Looper.getMainLooper()).postDelayed({
-                val move = mGame.computerMove
-                setMove(TicTacToeGame.COMPUTER_PLAYER, move)
-                mComputerMediaPlayer.start()
-                mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
-                val winner = mGame.checkForWinner()
-
-                if (winner != 0)
-                    mGameOver = true
-
-                when (winner) {
-                    0 -> mInfoTextView.setText(R.string.turn_human)
-                    1 -> {
-                        mInfoTextView.setText(R.string.result_tie)
-                        ++mTies
-                    }
-                    2 -> {
-                        ++mHumanWins
-                    }
-                    3 -> {
-                        mInfoTextView.setText(R.string.result_computer_wins)
-                        ++mComputerWins
-                    }
-                    else -> mInfoTextView.text = "Error D:"
-                }
-                displayScores()
-            }, 500)
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        val ed : SharedPreferences.Editor = mPrefs.edit()
-        ed.putInt("mHumanWins", mHumanWins)
-        ed.putInt("mTies", mTies)
-        ed.putInt("mComputerWins", mComputerWins)
-        ed.putInt("mDifficultyLevel", mGame.difficultyLevelInt)
-        ed.commit()
-
-    }
+//    override fun onStop() {
+//        super.onStop()
+//
+//        val ed : SharedPreferences.Editor = mPrefs.edit()
+////        ed.putInt("mHumanWins", mHumanWins)
+////        ed.putInt("mTies", mTies)
+////        ed.putInt("mComputerWins", mComputerWins)
+//        ed.putInt("mDifficultyLevel", mGame.difficultyLevelInt)
+//        ed.commit()
+//
+//    }
 
     private fun startNewGame() {
         mGame.clearBoard()
@@ -274,85 +329,76 @@ class MainActivity : AppCompatActivity() {
         val pos = row * 3 + col;
 
         println(pos)
-        if (!mGameOver && mPlayerTurn == TicTacToeGame.HUMAN_PLAYER && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
+        if (!mWaitingPlayers && !mGameOver && mPlayerTurn == mUsername) {
+            if (mPlayerTurn == mPlayer1){
                 mHumanMediaPlayer.start()
-
-                var winner = mGame.checkForWinner()
-                if (winner == 0){
-                    mPlayerTurn = TicTacToeGame.COMPUTER_PLAYER
-                    mInfoTextView.setText(R.string.turn_computer)
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        val move = mGame.computerMove
-                        setMove(TicTacToeGame.COMPUTER_PLAYER, move)
-                        try {
-                            mComputerMediaPlayer.start()
-                        } catch (e : Exception) {
-                            println(e.message)
-                        }
-                        mPlayerTurn = TicTacToeGame.HUMAN_PLAYER
-                        winner = mGame.checkForWinner()
-
-                        if (winner != 0)
-                            mGameOver = true
-
-                        when (winner) {
-                            0 -> mInfoTextView.setText(R.string.turn_human)
-                            1 -> {
-                                mInfoTextView.setText(R.string.result_tie)
-                                ++mTies
-                            }
-                            2 -> {
-                                ++mHumanWins
-                            }
-                            3 -> {
-                                mInfoTextView.setText(R.string.result_computer_wins)
-                                ++mComputerWins
-                            }
-                            else -> mInfoTextView.text = "Error D:"
-                        }
-                        displayScores()
-                    }, 1000)
-                }
-
-                if (winner != 0)
-                    mGameOver = true
-
-                when (winner) {
-                    0 -> mInfoTextView.setText(R.string.turn_computer)
-                    1 -> {
-                        mInfoTextView.setText(R.string.result_tie)
-                        ++mTies
-                    }
-                    2 -> {
-                        mInfoTextView.setText(R.string.result_human_wins)
-                        ++mHumanWins
-                    }
-                    3 -> {
-                        mInfoTextView.setText(R.string.result_computer_wins)
-                        ++mComputerWins
-                    }
-                    else -> mInfoTextView.text = "Error D:"
-                }
-                displayScores()
+                mGame.setMove(TicTacToeGame.HUMAN_PLAYER, pos)
+                mPlayerTurn = mPlayer2
+            } else {
+                mComputerMediaPlayer.start()
+                mGame.setMove(TicTacToeGame.COMPUTER_PLAYER, pos)
+                mPlayerTurn = mPlayer1
             }
+
+            var dbBoard = ""
+            for (i in mGame.mBoard.indices){
+                dbBoard += mGame.mBoard[i]
+                if (i < 8){
+                    dbBoard += ","
+                }
+            }
+            print(dbBoard)
+
+            db.collection("boards").document(mBoardName).update("board", dbBoard)
+
+            var winner = mGame.checkForWinner()
+            if (winner == 0){
+                db.collection("boards").document(mBoardName).update("turn", mPlayerTurn)
+            }
+
+            if (winner != 0){
+                mGameOver = true
+                db.collection("boards").document(mBoardName).update("status", "finished")
+            }
+
+
+            when (winner) {
+                0 -> mInfoTextView.setText("Its turn of " + mPlayerTurn)
+                1 -> {
+                    mInfoTextView.setText(R.string.result_tie)
+//                        ++mTies
+                }
+                2 -> {
+                    mInfoTextView.setText(mPlayer1 +" won!")
+//                        ++mHumanWins
+                }
+                3 -> {
+                    mInfoTextView.setText(mPlayer2 +" won!")
+//                        ++mComputerWins
+                }
+                else -> mInfoTextView.text = "Error D:"
+            }
+
+            displayScores()
+        }
 
         false
     }
 
     private fun setSavedScores() {
-        mHumanWins = mPrefs.getInt("mHumanWins", 0);
-        mComputerWins = mPrefs.getInt("mComputerWins", 0);
-        mTies = mPrefs.getInt("mTies", 0);
+//        mHumanWins = mPrefs.getInt("mHumanWins", 0);
+//        mComputerWins = mPrefs.getInt("mComputerWins", 0);
+//        mTies = mPrefs.getInt("mTies", 0);
         displayScores()
     }
 
     private fun displayScores() {
-        mHumanWinsTextView.text = getString(R.string.human_wins, mHumanWins)
-        mTiesTextView.text = getString(R.string.ties, mTies)
-        mComputerWinsTextView.text = getString(R.string.computer_wins, mComputerWins)
+//        mHumanWinsTextView.text = getString(R.string.human_wins, mHumanWins)
+//        mTiesTextView.text = getString(R.string.ties, mTies)
+//        mComputerWinsTextView.text = getString(R.string.computer_wins, mComputerWins)
     }
 
     fun main() {
-        startNewGame()
+//        startNewGame()
     }
 }

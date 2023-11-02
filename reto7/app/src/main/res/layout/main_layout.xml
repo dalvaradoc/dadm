@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="center_horizontal"
     android:paddingTop="15dp">
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Game"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
     <co.edu.unal.reto3.BoardView
         android:id="@+id/board"
         android:layout_width="300dp"
@@ -18,17 +31,17 @@
             android:layout_height="wrap_content" android:text="info"
             android:gravity="center_horizontal" android:layout_marginTop="20dp"
             android:textSize="20dp" />
-        <TextView android:id="@+id/human_wins" android:layout_width="fill_parent"
-            android:layout_height="wrap_content" android:text="@string/human_wins"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
-            android:textSize="20sp" />
-        <TextView android:id="@+id/ties" android:layout_width="fill_parent"
-            android:layout_height="wrap_content" android:text="@string/ties"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
-            android:textSize="20sp" />
-        <TextView android:id="@+id/computer_wins" android:layout_width="fill_parent"
-            android:layout_height="wrap_content" android:text="@string/computer_wins"
-            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"
-            android:textSize="20sp" />
+<!--        <TextView android:id="@+id/human_wins" android:layout_width="fill_parent"-->
+<!--            android:layout_height="wrap_content" android:text="@string/human_wins"-->
+<!--            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"-->
+<!--            android:textSize="20sp" />-->
+<!--        <TextView android:id="@+id/ties" android:layout_width="fill_parent"-->
+<!--            android:layout_height="wrap_content" android:text="@string/ties"-->
+<!--            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"-->
+<!--            android:textSize="20sp" />-->
+<!--        <TextView android:id="@+id/computer_wins" android:layout_width="fill_parent"-->
+<!--            android:layout_height="wrap_content" android:text="@string/computer_wins"-->
+<!--            android:gravity="center_horizontal" android:layout_marginTop="20dp" android:layout_marginRight="20dp"-->
+<!--            android:textSize="20sp" />-->
     </LinearLayout>
 </LinearLayout>

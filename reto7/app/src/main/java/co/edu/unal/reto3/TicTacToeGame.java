@@ -14,7 +14,7 @@ import java.util.Scanner;
 
 public class TicTacToeGame {
     public final static int BOARD_SIZE = 9;
-    private char mBoard[] = {' ',' ',' ',' ',' ',' ',' ',' ',' '};
+    char mBoard[] = {' ',' ',' ',' ',' ',' ',' ',' ',' '};
     public static final char HUMAN_PLAYER = 'X';
     public static final char COMPUTER_PLAYER = 'O';
     public static final char OPEN_SPOT = ' ';
