@@ -27,6 +27,7 @@ export default function CreateForm() {
     name: "",
     url: "",
     phone: "",
+    email: "",
     p_s: "",
     classi: "",
   });
@@ -42,8 +43,8 @@ export default function CreateForm() {
   const createCompany = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'INSERT INTO contacts (name, url, phone, products_services, classification) VALUES (?, ?, ?, ?, ?)',
-        [formData.name, formData.url, parseInt(formData.phone), formData.p_s, formData.classi],
+        'INSERT INTO contacts (name, url, phone, email, products_services, classification) VALUES (?, ?, ?, ?, ?, ?)',
+        [formData.name, formData.url, parseInt(formData.phone), formData.email, formData.p_s, formData.classi],
         () => router.back(),
         (trans, err) => {console.log(err); console.log(formData)}
       );
@@ -74,21 +75,22 @@ export default function CreateForm() {
           onChangeText={(text) => handleChange("phone", text)}
         />
         <TextInput
+          label="Email"
+          value={formData.email}
+          style={styles.textInput}
+          onChangeText={(text) => handleChange("email", text)}
+        />
+        <TextInput
           label="Productos y servicios"
           value={formData.p_s}
           style={styles.textInput}
           onChangeText={(text) => handleChange("p_s", text)}
         />
-
-        {/* <TextInput
-          label="Classificación"
-          value={formData.classi}
-          style={styles.textInput}
-          onChangeText={(text) => handleChange("classi", text)}
-        /> */}
-
         <SegmentedButtons
           value={formData.classi}
+          style={{
+            marginVertical: 10
+          }}
           onValueChange={(text) => handleChange("classi", text)}
           buttons={[
             {
