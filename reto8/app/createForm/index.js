@@ -43,13 +43,23 @@ export default function CreateForm() {
   const createCompany = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'INSERT INTO contacts (name, url, phone, email, products_services, classification) VALUES (?, ?, ?, ?, ?, ?)',
-        [formData.name, formData.url, parseInt(formData.phone), formData.email, formData.p_s, formData.classi],
+        "INSERT INTO contacts (name, url, phone, email, products_services, classification) VALUES (?, ?, ?, ?, ?, ?)",
+        [
+          formData.name,
+          formData.url,
+          parseInt(formData.phone),
+          formData.email,
+          formData.p_s,
+          formData.classi,
+        ],
         () => router.back(),
-        (trans, err) => {console.log(err); console.log(formData)}
+        (trans, err) => {
+          console.log(err);
+          console.log(formData);
+        }
       );
     });
-  }
+  };
 
   return (
     <View>
@@ -89,7 +99,7 @@ export default function CreateForm() {
         <SegmentedButtons
           value={formData.classi}
           style={{
-            marginVertical: 10
+            marginVertical: 10,
           }}
           onValueChange={(text) => handleChange("classi", text)}
           buttons={[
@@ -115,7 +125,7 @@ export default function CreateForm() {
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

@@ -100,7 +100,7 @@ export default function EditForm() {
           console.log(err);
         }
       );
-    });
+    }); 
   }
 
   return (
