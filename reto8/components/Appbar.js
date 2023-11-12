@@ -5,10 +5,10 @@ import { Appbar } from 'react-native-paper';
 
 const AppBar = ({title, backUrl = '' }) => (
   <Appbar.Header>
-    <Link href={backUrl} asChild>
+    {backUrl == '' ? <></> : <Link href={backUrl} asChild>
         <Appbar.BackAction onPress={() => {}} />
-    </Link>
-    <Appbar.Content title={title} />
+    </Link>}
+    <Appbar.Content style={{marginLeft: 15}} title={title} />
   </Appbar.Header>
 );
 

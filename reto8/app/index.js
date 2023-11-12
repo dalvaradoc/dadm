@@ -1,9 +1,10 @@
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as SQLite from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { FAB } from "react-native-paper";
 import { router } from 'expo-router';
+import * as SQLite from "expo-sqlite";
+import AppBar from "../components/Appbar";
 
 function openDatabase() {
   if (Platform.OS === "web") {
@@ -22,14 +23,17 @@ function openDatabase() {
 
 const db = openDatabase();
 
-function Items({ onPressItem }) {
+const B = (props) => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>
+
+function Items() {
   const [items, setItems] = useState(null);
 
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        `select * from contacts;`,
-        (_, { rows: { _array } }) => setItems(_array)
+        `select * from contacts;`,[], (trans, res) => setItems(res.rows["_array"]),
+        () => console.log("ok!"),
+        () => console.log("error retreaving rows")
       );
     });
     console.log("retrieving rows...");
@@ -39,21 +43,31 @@ function Items({ onPressItem }) {
     return null;
   }
 
+  const classi = {
+    "con": "Consultoría",
+    "des": "Dessarrollo a la medida",
+    "fab": "Fábrica de software"
+  }
+
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionHeading}>Contacts</Text>
-      {items.map(({ id, name, url, phone, p_s, classi }) => (
+      {/* <Text style={styles.sectionHeading}>Contacts</Text> */}
+      {items.map(({ id, name, url, phone, products_services, classification }) => (
         <TouchableOpacity
           key={id}
-          onPress={() => onPressItem && onPressItem(id)}
+          onPress={() => router.push("/editForm/"+id)}
           style={{
             backgroundColor: "#fff",
-            borderColor: "#000",
-            borderWidth: 1,
-            padding: 8,
+            borderColor: "#00000055",
+            borderBottomWidth: 1,
+            padding: 8
           }}
         >
-          <Text style={{ color:  "#000" }}>{name}</Text>
+          <Text style={{ color:  "#000" }}><B>Name: </B> {name}</Text>
+          <Text style={{ color:  "#000" }}><B>URL: </B> {url}</Text>
+          <Text style={{ color:  "#000" }}><B>Phone: </B> {phone}</Text>
+          <Text style={{ color:  "#000" }}><B>Products/Services: </B> {products_services}</Text>
+          <Text style={{ color:  "#000" }}><B>Classification: </B> {classi[classification]}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -65,17 +79,18 @@ export default function App() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        'create table if not exists contacts ( id	INTEGER NOT NULL, name TEXT NOT NULL, url TEXT NOT NULL, phone NUMERIC NOT NULL, products_services	TEXT NOT NULL, classification	TEXT NOT NULL CHECK(classification = "con" OR classification = "des" OR classification = "fab"), PRIMARY KEY(id AUTOINCREMENT));'
+        'create table if not exists contacts (id	INTEGER NOT NULL, name	TEXT NOT NULL, url	TEXT NOT NULL,phone	NUMERIC NOT NULL, products_services	TEXT NOT NULL, classification TEXT NOT NULL CHECK(classification = "con" OR classification = "des" OR classification = "fab"), PRIMARY KEY(id AUTOINCREMENT));'
+        // "DROP TABLE contacts"
       );
-    },() => console.log(err), () => console.log("Table created"));
+    },() => console.log("error"), () => console.log("Table created"));
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Contacts App</Text>
+    <>
+      <AppBar title={"Contactos"} />
       <Items  />
       <FAB style={styles.fab} icon="plus" onPress={() => router.push("/createForm")} />
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -83,11 +98,13 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     flex: 1,
-    alignItems: "center"
+    padding: 10
+    // alignItems: "center"
   },
   title: {
     fontSize: 30,
-    fontWeight: "bold"
+    fontWeight: "bold",
+    textAlign: "center"
   },
   heading: {
     fontSize: 20,
@@ -104,7 +121,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     margin: 16,
-    padding: 8,
   },
   listArea: {
     backgroundColor: "#f0f0f0",

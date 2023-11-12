@@ -2,7 +2,7 @@ import * as React from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, List, SegmentedButtons, TextInput } from "react-native-paper";
 import AppBar from "../../components/Appbar";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as SQLite from "expo-sqlite";
 
 function openDatabase() {
@@ -22,14 +22,33 @@ function openDatabase() {
 
 const db = openDatabase();
 
-export default function CreateForm() {
+export default function EditForm() {
+  const { id } = useLocalSearchParams();
+
   const [formData, setFormData] = React.useState({
     name: "",
     url: "",
     phone: "",
-    p_s: "",
-    classi: "",
+    products_services: "",
+    classification: "",
   });
+
+  React.useEffect(() => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `select * from contacts where "id" = ?;`,
+        [id],
+        (trans, res) => {
+          let item = res.rows["_array"][0];
+          item.phone = item.phone.toString();
+          setFormData(item);
+        },
+        () => console.log("ok!"),
+        () => console.log("error retreaving rows")
+      );
+    });
+    console.log("retrieving rows...");
+  }, []);
 
   const handleChange = (name, value) => {
     setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
@@ -39,20 +58,30 @@ export default function CreateForm() {
     return formData.firstName.length === 1;
   };
 
-  const createCompany = () => {
+  const updateCompany = () => {
     db.transaction((tx) => {
       tx.executeSql(
-        'INSERT INTO contacts (name, url, phone, products_services, classification) VALUES (?, ?, ?, ?, ?)',
-        [formData.name, formData.url, parseInt(formData.phone), formData.p_s, formData.classi],
+        "UPDATE contacts SET name = ?, url = ?, phone = ?, products_services = ?, classification = ? WHERE id = ?",
+        [
+          formData.name,
+          formData.url,
+          parseInt(formData.phone),
+          formData.products_services,
+          formData.classification,
+          id
+        ],
         () => router.back(),
-        (trans, err) => {console.log(err); console.log(formData)}
+        (trans, err) => {
+          console.log(err);
+          console.log(formData);
+        }
       );
     });
-  }
+  };
 
   return (
     <View>
-      <AppBar title="Crear empresa" backUrl="/" />
+      <AppBar title="Editar empresa" backUrl="/" />
       <View style={styles.container}>
         <TextInput
           label="Nombre de la empresa"
@@ -75,21 +104,13 @@ export default function CreateForm() {
         />
         <TextInput
           label="Productos y servicios"
-          value={formData.p_s}
+          value={formData.products_services}
           style={styles.textInput}
-          onChangeText={(text) => handleChange("p_s", text)}
+          onChangeText={(text) => handleChange("products_services", text)}
         />
-
-        {/* <TextInput
-          label="Classificación"
-          value={formData.classi}
-          style={styles.textInput}
-          onChangeText={(text) => handleChange("classi", text)}
-        /> */}
-
         <SegmentedButtons
-          value={formData.classi}
-          onValueChange={(text) => handleChange("classi", text)}
+          value={formData.classification}
+          onValueChange={(text) => handleChange("classification", text)}
           buttons={[
             {
               value: "con",
@@ -103,17 +124,31 @@ export default function CreateForm() {
           ]}
         />
 
-        <Button
-          style={{ marginTop: 20, maxWidth: 200 }}
-          mode="contained"
-          onPress={() => createCompany()}
-        >
-          Crear empresa
-        </Button>
+        <View style={{ display: "flex", flexDirection: "row" }}>
+          <Button
+            style={{ marginTop: 20, width: "50%", borderRadius: 0 }}
+            mode="contained"
+            onPress={() => updateCompany()}
+          >
+            Guardar
+          </Button>
+          <Button
+            style={{
+              marginTop: 20,
+              width: "50%",
+              borderRadius: 0,
+              backgroundColor: "red",
+            }}
+            mode="contained"
+            onPress={() => updateCompany()}
+          >
+            Eliminar
+          </Button>
+        </View>
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
