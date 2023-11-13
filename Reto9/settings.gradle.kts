@@ -15,4 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Reto9"
 include(":app")
- 
