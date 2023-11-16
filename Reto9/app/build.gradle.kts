@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.AaptOptions
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,7 +7,7 @@ plugins {
 
 android {
     namespace = "co.edu.unal.reto9"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "co.edu.unal.reto9"
@@ -47,6 +49,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    androidResources {
+        noCompress.add("map")
+    }
 }
 
 dependencies {
@@ -66,4 +72,15 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    //Mapsforge implementations
+    implementation("org.mapsforge:mapsforge-core:0.20.0")
+    implementation("org.mapsforge:mapsforge-map:0.20.0")
+    implementation("org.mapsforge:mapsforge-map-reader:0.20.0")
+    implementation("org.mapsforge:mapsforge-themes:0.20.0")
+    implementation("org.mapsforge:mapsforge-map-android:0.20.0")
+    implementation("com.caverock:androidsvg:1.4")
+    implementation("org.mapsforge:mapsforge-core:0.20.0")
+    implementation("org.mapsforge:mapsforge-poi:0.20.0")
+    implementation("org.mapsforge:mapsforge-poi-android:0.20.0")
 }
